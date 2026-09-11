@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emote Forge</title>
+<meta name="description" content="Convert any image or GIF into a platform-ready emote in your browser: MyPrize 112px WebP under 40 KB, Kick 500px PNG/GIF, Discord 128px. Nothing is uploaded.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#0b0f17;--panel:#121927;--line:#243047;--ink:#e8f0ff;--mist:#93a3bd;--cyan:#3ee8ff;--mag:#ff3ec9;--gold:#ffcf5a;--ok:#3ef0a2;--bad:#ff5e6c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Rajdhani",system-ui,sans-serif;padding:0 20px;padding-block:24px 56px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:30px;font-weight:700;letter-spacing:.04em;margin:0}
+h1 span{color:var(--cyan)}
+.sub{color:var(--mist);margin:4px 0 18px;max-width:70ch}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:26px 20px;text-align:center;background:var(--panel);cursor:pointer;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--cyan);background:#0f1b2b}
+.drop b{color:var(--cyan)}
+.drop small{display:block;color:var(--mist);margin-top:6px}
+input[type=file]{display:none}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:16px 0}
+.opt{display:flex;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.opt label{color:var(--mist);font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+select,button{font:inherit;font-weight:600;background:#0f1622;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+button.go{background:var(--cyan);color:#06111a;border:0;padding:10px 18px;border-radius:8px;cursor:pointer}
+button.go:disabled{opacity:.4;cursor:default}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h2{font-size:16px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 2px;color:var(--cyan)}
+.card .spec{font:13px "JetBrains Mono",monospace;color:var(--mist);margin-bottom:10px}
+.prev{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.prev .box{background:repeating-conic-gradient(#1a2234 0 25%,#0f1622 0 50%) 0 0/16px 16px;border:1px solid var(--line);border-radius:8px;padding:6px;display:inline-flex}
+.prev img{image-rendering:auto;display:block}
+.meta{font:14px "JetBrains Mono",monospace}
+.meta b{font-weight:600}
+.pass{color:var(--ok)}.fail{color:var(--bad)}.work{color:var(--gold)}
+a.dl{display:inline-block;margin-top:8px;background:var(--gold);color:#1a1400;font-weight:700;padding:7px 12px;border-radius:6px;text-decoration:none}
+a.dl.off{opacity:.35;pointer-events:none}
+.log{margin-top:22px;font:13px "JetBrains Mono",monospace;color:var(--mist);white-space:pre-wrap;max-height:180px;overflow:auto;background:#0a0e15;border:1px solid var(--line);border-radius:8px;padding:10px}
+footer{margin-top:24px;color:var(--mist);font-size:14px;max-width:80ch}
+footer a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>EMOTE <span>FORGE</span></h1>
+<p class="sub">Drop a JPEG, PNG or GIF and get it back as an emote that fits each platform's rules. Everything happens in your browser; nothing is uploaded anywhere.</p>
+
+<div class="drop" id="drop">
+  <b>Drop an image here</b> or click to choose &nbsp;·&nbsp; you can also paste from the clipboard
+  <small>JPEG · PNG · GIF (animated GIFs stay animated where the platform allows)</small>
+  <input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp">
+</div>
+
+<div class="row">
+  <div class="opt"><label for="fit">Fit</label>
+    <select id="fit"><option value="contain">Contain (pad transparent)</option><option value="cover">Cover (crop to square)</option></select></div>
+  <div class="opt"><label for="targets">Make</label>
+    <select id="targets"><option value="all">All three</option><option value="myprize">MyPrize only</option><option value="kick">Kick only</option><option value="discord">Discord only</option></select></div>
+  <button class="go" id="go" disabled>Forge</button>
+  <span class="meta" id="srcinfo"></span>
+</div>
+
+<div class="cards" id="cards"></div>
+<div class="log" id="log" hidden></div>
+
+<footer>Presets: <b>MyPrize</b> 112×112 WebP, under 40 KB, animation kept as animated WebP · <b>Kick</b> 500×500 PNG or GIF, under 1 MB · <b>Discord</b> 128×128 PNG or GIF, under 256 KB. Animated GIF decoding uses the browser's built-in decoder (Chrome and Edge); elsewhere the first frame is used. GIF output is encoded with <a href="https://github.com/jnordberg/gif.js">gif.js</a> (MIT). Source: <a href="https://github.com/CrandellWS/emote-forge">CrandellWS/emote-forge</a>.</footer>
+</div>
+
+<script src="lib/gif.js"></script>
+<script>
+const PRESETS = {
+  myprize: { name: 'MyPrize', size: 112, maxBytes: 40 * 1024, still: 'webp', anim: 'webp', spec: '112×112 · WebP · ≤ 40 KB' },
+  kick:    { name: 'Kick',    size: 500, maxBytes: 1024 * 1024, still: 'png', anim: 'gif', spec: '500×500 · PNG / GIF · ≤ 1 MB' },
+  discord: { name: 'Discord', size: 128, maxBytes: 256 * 1024, still: 'png', anim: 'gif', spec: '128×128 · PNG / GIF · ≤ 256 KB' },
+};
+const $ = s => document.querySelector(s);
+const logEl = $('#log');
+function log(m) { logEl.hidden = false; logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+const kb = n => (n / 1024).toFixed(1) + ' KB';
+
+let source = null; // { name, frames: [{bitmap, duration}], width, height, animated }
+
+// ---------- loading ----------
+async function loadFile(file) {
+  logEl.textContent = ''; logEl.hidden = true;
+  const buf = await file.arrayBuffer();
+  const isGif = file.type === 'image/gif' || /\.gif$/i.test(file.name);
+  let frames = [];
+  if (isGif && 'ImageDecoder' in window) {
+    try {
+      const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
+      await dec.tracks.ready;
+      const track = dec.tracks.selectedTrack;
+      const n = track.frameCount;
+      for (let i = 0; i < n; i++) {
+        const { image } = await dec.decode({ frameIndex: i });
+        const bmp = await createImageBitmap(image);
+        const dur = image.duration ? Math.max(20, Math.round(image.duration / 1000)) : 100; // µs → ms
+        image.close();
+        frames.push({ bitmap: bmp, duration: dur });
+      }
+      dec.close();
+    } catch (e) { log('GIF frame decode failed, using first frame: ' + e.message); frames = []; }
+  }
+  if (!frames.length) {
+    const bmp = await createImageBitmap(new Blob([buf], { type: file.type || 'image/png' }));
+    frames = [{ bitmap: bmp, duration: 100 }];
+  }
+  source = { name: file.name.replace(/\.[^.]+$/, ''), frames, width: frames[0].bitmap.width, height: frames[0].bitmap.height, animated: frames.length > 1 };
+  const total = frames.reduce((a, f) => a + f.duration, 0);
+  $('#srcinfo').innerHTML = `<b>${file.name}</b> · ${source.width}×${source.height} · ${kb(buf.byteLength)}` + (source.animated ? ` · ${frames.length} frames · ${(total/1000).toFixed(1)} s` : '');
+  $('#go').disabled = false;
+  $('#cards').innerHTML = '';
+}
+
+// ---------- drawing ----------
+function drawFrame(bitmap, size, fit) {
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  const sw = bitmap.width, sh = bitmap.height;
+  if (fit === 'cover') {
+    const s = Math.max(size / sw, size / sh);
+    const dw = sw * s, dh = sh * s;
+    g.drawImage(bitmap, (size - dw) / 2, (size - dh) / 2, dw, dh);
+  } else {
+    const s = Math.min(size / sw, size / sh);
+    const dw = sw * s, dh = sh * s;
+    g.drawImage(bitmap, (size - dw) / 2, (size - dh) / 2, dw, dh);
+  }
+  return c;
+}
+const toBlob = (canvas, type, q) => new Promise(r => canvas.toBlob(r, type, q));
+
+// ---------- WebP animation muxer (native per-frame encode + RIFF/ANMF container) ----------
+function readChunks(buf) {
+  const v = new DataView(buf); const out = [];
+  let p = 12; // skip RIFF....WEBP
+  while (p + 8 <= buf.byteLength) {
+    const fourcc = String.fromCharCode(v.getUint8(p), v.getUint8(p+1), v.getUint8(p+2), v.getUint8(p+3));
+    const size = v.getUint32(p + 4, true);
+    out.push({ fourcc, data: new Uint8Array(buf, p + 8, size) });
+    p += 8 + size + (size & 1);
+  }
+  return out;
+}
+function u24(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255]; }
+function chunk(fourcc, bytes) {
+  const size = bytes.length; const pad = size & 1;
+  const out = new Uint8Array(8 + size + pad);
+  for (let i = 0; i < 4; i++) out[i] = fourcc.charCodeAt(i);
+  new DataView(out.buffer).setUint32(4, size, true);
+  out.set(bytes, 8);
+  return out;
+}
+function concat(parts) { const n = parts.reduce((a, p) => a + p.length, 0); const out = new Uint8Array(n); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; } return out; }
+async function encodeAnimatedWebP(canvases, durations, size, quality) {
+  const anmf = [];
+  let hasAlpha = false;
+  for (let i = 0; i < canvases.length; i++) {
+    const blob = await toBlob(canvases[i], 'image/webp', quality);
+    const chunks = readChunks(await blob.arrayBuffer());
+    const payload = chunks.filter(c => c.fourcc === 'ALPH' || c.fourcc === 'VP8 ' || c.fourcc === 'VP8L');
+    if (payload.some(c => c.fourcc === 'ALPH' || c.fourcc === 'VP8L')) hasAlpha = true;
+    const head = new Uint8Array([...u24(0), ...u24(0), ...u24(size - 1), ...u24(size - 1), ...u24(durations[i]), 0x02 /* no blend, no dispose */]);
+    anmf.push(chunk('ANMF', concat([head, ...payload.map(c => chunk(c.fourcc, c.data))])));
+  }
+  const vp8x = chunk('VP8X', new Uint8Array([0x02 | (hasAlpha ? 0x10 : 0), 0, 0, 0, ...u24(size - 1), ...u24(size - 1)]));
+  const anim = chunk('ANIM', new Uint8Array([0, 0, 0, 0, 0, 0])); // bg BGRA transparent, loop forever
+  const body = concat([vp8x, anim, ...anmf]);
+  const riff = new Uint8Array(12 + body.length);
+  riff.set([82, 73, 70, 70], 0); new DataView(riff.buffer).setUint32(4, 4 + body.length, true); riff.set([87, 69, 66, 80], 8); riff.set(body, 12);
+  return new Blob([riff], { type: 'image/webp' });
+}
+
+// ---------- GIF encode (gif.js) ----------
+function encodeGif(canvases, durations, size, quality) {
+  return new Promise((resolve, reject) => {
+    const gif = new GIF({ workers: 2, quality, width: size, height: size, workerScript: 'lib/gif.worker.js', transparent: 0x00000000, repeat: 0 });
+    canvases.forEach((c, i) => gif.addFrame(c, { delay: durations[i], copy: true, dispose: 2 }));
+    gif.on('finished', resolve); gif.on('abort', () => reject(new Error('gif abort')));
+    gif.render();
+  });
+}
+
+// ---------- frame thinning ----------
+function thin(frames, keepEvery) {
+  const out = []; let carry = 0;
+  for (let i = 0; i < frames.length; i++) {
+    carry += frames[i].duration;
+    if (i % keepEvery === 0) { out.push({ ...frames[i], duration: 0 }); }
+    out[out.length - 1].duration += frames[i].duration; carry = 0;
+  }
+  return out.map(f => ({ ...f, duration: Math.max(20, Math.round(f.duration)) }));
+}
+
+// ---------- forge one preset ----------
+async function forge(key, fit, card) {
+  const P = PRESETS[key];
+  const status = card.querySelector('.status'), prev = card.querySelector('.box'), dl = card.querySelector('a.dl'), meta = card.querySelector('.detail');
+  status.className = 'status work'; status.textContent = 'working…';
+  const animated = source.animated;
+  let frames = source.frames.map(f => ({ ...f }));
+  let blob = null, note = '';
+  try {
+    if (!animated) {
+      const c = drawFrame(frames[0].bitmap, P.size, fit);
+      if (P.still === 'png') {
+        blob = await toBlob(c, 'image/png');
+        if (blob.size > P.maxBytes) { // fall back to lossy webp? platform wants png; try 8-bit via gif.js single frame
+          const g = await encodeGif([c], [100], P.size, 1); note = 'PNG too big, delivered as GIF (256 colours)'; blob = g;
+        }
+      } else {
+        let lo = 0.30, hi = 0.95, best = null;
+        for (let i = 0; i < 8; i++) { const q = (lo + hi) / 2; const b = await toBlob(c, 'image/webp', q); if (b.size <= P.maxBytes) { best = b; lo = q; } else hi = q; }
+        blob = best || await toBlob(c, 'image/webp', 0.3);
+      }
+    } else {
+      let keepEvery = 1;
+      while (true) {
+        const fr = keepEvery === 1 ? frames : thin(frames, keepEvery);
+        const canvases = fr.map(f => drawFrame(f.bitmap, P.size, fit));
+        const durations = fr.map(f => f.duration);
+        if (P.anim === 'webp') {
+          let lo = 0.25, hi = 0.92, best = null;
+          for (let i = 0; i < 7; i++) { const q = (lo + hi) / 2; const b = await encodeAnimatedWebP(canvases, durations, P.size, q); if (b.size <= P.maxBytes) { best = b; lo = q; } else hi = q; }
+          blob = best;
+        } else {
+          for (const q of [8, 12, 18, 26]) { const b = await encodeGif(canvases, durations, P.size, q); blob = b; if (b.size <= P.maxBytes) break; }
+          if (blob.size > P.maxBytes) blob = null;
+        }
+        if (blob) { if (keepEvery > 1) note = `kept 1 frame in ${keepEvery} (${fr.length} frames) to fit`; break; }
+        keepEvery++;
+        if (fr.length <= 2 || keepEvery > 8) { note = 'could not fit under the limit even after thinning frames'; blob = blob || await encodeAnimatedWebP(canvases, durations, P.size, 0.25); break; }
+      }
+    }
+  } catch (e) { status.className = 'status fail'; status.textContent = 'failed: ' + e.message; log(`${P.name}: ${e.stack || e}`); return; }
+  const ok = blob.size <= P.maxBytes;
+  const url = URL.createObjectURL(blob);
+  const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/gif' ? 'gif' : 'png';
+  prev.innerHTML = `<img src="${url}" width="${Math.min(P.size, 128)}" height="${Math.min(P.size, 128)}" alt="">`;
+  status.className = 'status ' + (ok ? 'pass' : 'fail'); status.textContent = ok ? 'fits' : 'over the limit';
+  meta.innerHTML = `<b>${kb(blob.size)}</b> of ${kb(P.maxBytes)} · ${P.size}×${P.size} · ${ext.toUpperCase()}${animated ? ' · animated' : ''}${note ? '<br>' + note : ''}`;
+  dl.href = url; dl.download = `${source.name}-${key}-${P.size}.${ext}`; dl.className = 'dl'; dl.textContent = `Download ${ext.toUpperCase()}`;
+  card.dataset.result = JSON.stringify({ bytes: blob.size, ok, type: blob.type, note });
+}
+
+function cardFor(key) {
+  const P = PRESETS[key];
+  const d = document.createElement('div'); d.className = 'card'; d.id = 'card-' + key;
+  d.innerHTML = `<h2>${P.name}</h2><div class="spec">${P.spec}</div><div class="prev"><span class="box"></span><div class="meta"><div class="status work">queued</div><div class="detail"></div></div></div><a class="dl off" href="#">Download</a>`;
+  return d;
+}
+
+async function forgeAll() {
+  if (!source) return;
+  $('#go').disabled = true;
+  const fit = $('#fit').value; const which = $('#targets').value;
+  const keys = which === 'all' ? Object.keys(PRESETS) : [which];
+  const cards = $('#cards'); cards.innerHTML = '';
+  const els = keys.map(k => { const c = cardFor(k); cards.appendChild(c); return [k, c]; });
+  for (const [k, c] of els) await forge(k, fit, c);
+  $('#go').disabled = false;
+  window.__forgeDone = true;
+}
+
+// ---------- wiring ----------
+const drop = $('#drop'), fileIn = $('#file');
+drop.addEventListener('click', () => fileIn.click());
+fileIn.addEventListener('change', () => fileIn.files[0] && loadFile(fileIn.files[0]));
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
+document.addEventListener('paste', e => { const it = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/')); if (it) loadFile(it.getAsFile()); });
+$('#go').addEventListener('click', forgeAll);
+
+// test hook: ?src=samples/test-anim.gif&auto=1
+(async () => {
+  const u = new URL(location.href); const src = u.searchParams.get('src');
+  if (src) { const r = await fetch(src); const b = await r.blob(); await loadFile(new File([b], src.split('/').pop(), { type: b.type })); if (u.searchParams.get('auto')) forgeAll(); }
+})();
+</script>
+</body>
+</html>
