@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Emote Forge</title>
-<meta name="description" content="Convert any image or GIF into a platform-ready emote in your browser: MyPrize 112px WebP under 40 KB, Kick 500px PNG/GIF, Discord 128px. Nothing is uploaded.">
+<meta name="description" content="Convert any image or GIF into a platform-ready emote in your browser: MyPrize 112px WebP under 39 KB, Kick 500px PNG/GIF, Discord 128px. Nothing is uploaded.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -66,13 +66,13 @@ footer a{color:var(--cyan)}
 <div class="cards" id="cards"></div>
 <div class="log" id="log" hidden></div>
 
-<footer>Presets: <b>MyPrize</b> 112×112 WebP, under 40 KB, animation kept as animated WebP · <b>Kick</b> 500×500 PNG or GIF, under 1 MB · <b>Discord</b> 128×128 PNG or GIF, under 256 KB. Animated GIF decoding uses the browser's built-in decoder (Chrome and Edge); elsewhere the first frame is used. GIF output is encoded with <a href="https://github.com/jnordberg/gif.js">gif.js</a> (MIT). Source: <a href="https://github.com/CrandellWS/emote-forge">CrandellWS/emote-forge</a>.</footer>
+<footer>Presets: <b>MyPrize</b> 112×112 WebP, under 39 KB, animation kept as animated WebP · <b>Kick</b> 500×500 PNG or GIF, under 1 MB · <b>Discord</b> 128×128 PNG or GIF, under 256 KB. Animated GIF decoding uses the browser's built-in decoder (Chrome and Edge); elsewhere the first frame is used. GIF output is encoded with <a href="https://github.com/jnordberg/gif.js">gif.js</a> (MIT). Source: <a href="https://github.com/CrandellWS/emote-forge">CrandellWS/emote-forge</a>.</footer>
 </div>
 
 <script src="lib/gif.js"></script>
 <script>
 const PRESETS = {
-  myprize: { name: 'MyPrize', size: 112, maxBytes: 40 * 1024, still: 'webp', anim: 'webp', spec: '112×112 · WebP · ≤ 40 KB' },
+  myprize: { name: 'MyPrize', size: 112, maxBytes: 39 * 1000, still: 'webp', anim: 'webp', spec: '112×112 · WebP · ≤ 39 KB' },
   kick:    { name: 'Kick',    size: 500, maxBytes: 1024 * 1024, still: 'png', anim: 'gif', spec: '500×500 · PNG / GIF · ≤ 1 MB' },
   discord: { name: 'Discord', size: 128, maxBytes: 256 * 1024, still: 'png', anim: 'gif', spec: '128×128 · PNG / GIF · ≤ 256 KB' },
 };
